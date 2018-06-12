@@ -615,9 +615,15 @@ class MatrixClient(object):
             # TODO: the rest of this for loop should be in room object method
             room.prev_batch = sync_room["timeline"]["prev_batch"]
 
+            new_users = set()
             for event in sync_room["state"]["events"]:
                 event['room_id'] = room_id
                 room._process_state_event(event)
+                if self._encryption and event["type"] == "m.room.member" \
+                        and event["content"]["membership"] == "join" and room.encrypted:
+                    new_users.add(event["state_key"])
+            if self._encryption and room.encrypted and new_users:
+                self.olm_device.device_list.add_users(new_users)
 
             for event in sync_room["timeline"]["events"]:
                 event['room_id'] = room_id
