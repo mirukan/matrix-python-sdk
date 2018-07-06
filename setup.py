@@ -54,7 +54,8 @@ setup(
         'test': ['pytest', 'responses'],
         'doc': ['Sphinx==1.4.6', 'sphinx-rtd-theme==0.1.9', 'sphinxcontrib-napoleon==0.5.3'],
         'format': ['flake8'],
-        'e2e': ['python-olm==dev', 'canonicaljson', 'appdirs']
+        'e2e': ['python-olm==dev', 'canonicaljson', 'appdirs', 'unpaddedbase64',
+                'pycrypto']
     },
     dependency_links=[
         'git+https://github.com/poljar/python-olm.git#egg=python-olm-dev'
