@@ -24,7 +24,7 @@ class DeviceList:
         self.api = api
         self.device_keys = device_keys
         # Stores the ids of users who need updating
-        self.outdated_user_ids = OutdatedUsersSet()
+        self.outdated_user_ids = _OutdatedUsersSet()
         # Stores the ids of users to fetch the device keys of eventually
         self.pending_outdated_user_ids = set()
         self.pending_users_lock = Lock()
@@ -35,7 +35,7 @@ class DeviceList:
         # Allows to wake up the thread when there are new users to update, and to
         # synchronise shared data.
         self.thread_condition = Condition()
-        self.update_thread = UpdateDeviceList(
+        self.update_thread = _UpdateDeviceList(
             self.thread_condition, self.outdated_user_ids, self._download_device_keys,
             self.tracked_user_ids
         )
@@ -190,7 +190,7 @@ class DeviceList:
         return changed
 
 
-class OutdatedUsersSet(set):
+class _OutdatedUsersSet(set):
     """Allows to know if elements in a set have been processed.
 
     This is done by adding elements along with an Event object. Then, functions
@@ -200,24 +200,24 @@ class OutdatedUsersSet(set):
     def __init__(self, iterable=()):
         self.events = set()
         self._sync_token = None
-        super(OutdatedUsersSet, self).__init__(iterable)
+        super(_OutdatedUsersSet, self).__init__(iterable)
 
     def mark_as_processed(self):
         for event in self.events:
             event.set()
 
     def copy(self):
-        new_set = OutdatedUsersSet(self)
+        new_set = _OutdatedUsersSet(self)
         new_set.events = self.events.copy()
         return new_set
 
     def clear(self):
         self.events.clear()
-        super(OutdatedUsersSet, self).clear()
+        super(_OutdatedUsersSet, self).clear()
 
     def update(self, iterable):
-        super(OutdatedUsersSet, self).update(iterable)
-        if isinstance(iterable, OutdatedUsersSet):
+        super(_OutdatedUsersSet, self).update(iterable)
+        if isinstance(iterable, _OutdatedUsersSet):
             self.events.update(iterable.events)
 
     @property
@@ -230,7 +230,7 @@ class OutdatedUsersSet(set):
             self._sync_token = token
 
 
-class UpdateDeviceList(Thread):
+class _UpdateDeviceList(Thread):
 
     def __init__(self, cond, user_ids, download_method, tracked_user_ids):
         self.cond = cond
@@ -240,7 +240,7 @@ class UpdateDeviceList(Thread):
         # Used by other threads to wait on download completion
         self.event = Event()
         self.should_terminate = Event()
-        super(UpdateDeviceList, self).__init__()
+        super(_UpdateDeviceList, self).__init__()
 
     def run(self):
         while True and not self.should_terminate.is_set():
@@ -276,4 +276,4 @@ class UpdateDeviceList(Thread):
         self.should_terminate.set()
         with self.cond:
             self.cond.notify()
-        super(UpdateDeviceList, self).join(timeout=timeout)
+        super(_UpdateDeviceList, self).join(timeout=timeout)

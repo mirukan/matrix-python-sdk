@@ -12,7 +12,8 @@ from matrix_client.client import MatrixClient
 from matrix_client.room import User
 from matrix_client.errors import MatrixRequestError
 from matrix_client.crypto.olm_device import OlmDevice
-from matrix_client.crypto.device_list import OutdatedUsersSet, UpdateDeviceList
+from matrix_client.crypto.device_list import (_OutdatedUsersSet as OutdatedUsersSet,
+                                              _UpdateDeviceList as UpdateDeviceList)
 from test.response_examples import example_key_query_response
 
 HOSTNAME = 'http://example.com'
