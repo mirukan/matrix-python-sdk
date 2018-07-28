@@ -161,6 +161,11 @@ class DeviceList:
             for device_id, payload in device_keys.get(user_id, {}).items():
                 if device_id == self.olm_device.device_id:
                     continue
+                if payload['user_id'] != user_id or payload['device_id'] != device_id:
+                    logger.warning('Mismatch in keys payload of device %s (%s) of user '
+                                   '%s (%s).', payload['device_id'], device_id,
+                                   payload['user_id'], user_id)
+                    continue
                 try:
                     signing_key = payload['keys']['ed25519:{}'.format(device_id)]
                     curve_key = payload['keys']['curve25519:{}'.format(device_id)]
