@@ -36,7 +36,7 @@ class TestDeviceList:
         download_device_keys = self.device_list._download_device_keys
         bob = '@bob:example.com'
         eve = '@eve:example.com'
-        user_devices = {self.alice: [], bob: []}
+        user_devices = {self.alice: [], bob: [], self.user_id: []}
 
         # This response is correct for Alice's keys, but lacks Bob's
         # There are no failures
@@ -84,14 +84,16 @@ class TestDeviceList:
         keys_field = resp['device_keys'][self.alice]['JLAFKJWSCS']['keys']
         key = keys_field.pop("ed25519:JLAFKJWSCS")
         keys_field["ed25519:wrong"] = key
-        # Kill another bird by adding failures
+        # Cover a missing branch by adding failures
         resp["failures"]["other.com"] = {}
+        # And one more by adding ourself
+        resp['device_keys'][self.user_id] = {self.device_id: 'dummy'}
         responses.add(responses.POST, self.query_url, json=resp)
 
         self.device.device_keys.clear()
         assert download_device_keys(user_devices)
         req = json.loads(responses.calls[0].request.body)
-        assert req['device_keys'] == {self.alice: [], bob: []}
+        assert req['device_keys'] == {self.alice: [], bob: [], self.user_id: []}
         expected_device_keys = {
             self.alice: {
                 'JLAFKJWSCS': {

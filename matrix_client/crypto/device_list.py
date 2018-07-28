@@ -159,6 +159,8 @@ class DeviceList:
         for user_id in user_devices:
             # The response might not contain every user_ids we requested
             for device_id, payload in device_keys.get(user_id, {}).items():
+                if device_id == self.olm_device.device_id:
+                    continue
                 try:
                     signing_key = payload['keys']['ed25519:{}'.format(device_id)]
                     curve_key = payload['keys']['curve25519:{}'.format(device_id)]
