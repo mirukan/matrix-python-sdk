@@ -170,7 +170,7 @@ class TestDeviceList:
     def test_get_room_device_keys(self):
         self.device_list.tracked_user_ids.clear()
         room = self.cli._mkroom(self.room_id)
-        room._members = [User(self.cli.api, self.alice)]
+        room._members[self.alice] = User(self.cli.api, self.alice)
 
         responses.add(responses.POST, self.query_url, json=example_key_query_response)
 
