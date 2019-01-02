@@ -54,10 +54,11 @@ setup(
         'test': ['pytest', 'responses'],
         'doc': ['Sphinx==1.4.6', 'sphinx-rtd-theme==0.1.9', 'sphinxcontrib-napoleon==0.5.3'],
         'format': ['flake8'],
-        'e2e': ['python-olm==dev', 'canonicaljson', 'appdirs', 'unpaddedbase64',
-                'pycrypto']
+        'e2e': ['python-olm==0.1', 'canonicaljson', 'appdirs', 'unpaddedbase64',
+                'pycrypto', 'future>=0.17.1']
     },
     dependency_links=[
-        'git+https://github.com/poljar/python-olm.git#egg=python-olm-dev'
+        'https://github.com/poljar/python-olm/tarball/'
+        'master#egg=python-olm-0.1',
     ]
 )
