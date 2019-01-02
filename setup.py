@@ -58,6 +58,9 @@ setup(
                 'pycrypto', 'future>=0.17.1']
     },
     dependency_links=[
+        'https://github.com/mirukan/matrix-python-sdk/blob/master/'
+        'olm_wheels/python_olm-0.1-cp36-cp36m-linux_x86_64.whl?raw=true',
+
         'https://github.com/poljar/python-olm/tarball/'
         'master#egg=python-olm-0.1',
     ]
