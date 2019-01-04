@@ -529,6 +529,10 @@ class Room(object):
         except MatrixRequestError:
             return False
 
+    @property
+    def members(self):
+        return {m.user_id: m for m in self.get_joined_members()}
+
     def get_joined_members(self):
         """Returns list of joined members (User objects)."""
         if self._members:
