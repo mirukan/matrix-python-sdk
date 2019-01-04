@@ -80,29 +80,35 @@ class User(object):
 
     @property
     def devices(self):
-        # If this user is joined in an encrypted room with us, we may already have an
-        # up-to-date list of their devices.
-        if self.client._encryption and \
-                self.user_id in self.client.olm_device.device_list.tracked_user_ids:
+        # If this user is joined in an encrypted room with us, we may already
+        # have an up-to-date list of their devices.
+        olm_dev = self.client.olm_device
 
-            if self.user_id not in self.client.device_keys:
-                self.client.db.get_device_keys(
-                    self.client.api, {self.user_id: []}, self.client.device_keys
+        if self.client._encryption and \
+           self.user_id in olm_dev.device_list.tracked_user_ids:
+
+            if self.user_id not in olm_dev.device_keys:
+                olm_dev.db.get_device_keys(
+                    self.client.api, {self.user_id: []}, olm_dev.device_keys
                 )
-            self._devices = self.client.device_keys[self.user_id]
+            self._devices = olm_dev.device_keys[self.user_id]
         else:
-            devices = self.client.api.query_keys({self.user_id: []})["device_keys"]
+            devices = self.client.api.query_keys({self.user_id: []})\
+                      ["device_keys"]
+
             for device_id in devices:
                 if device_id not in self._devices:
-                    # Do not add the keys even if they are in the payload, because
-                    # we are not able to verify them right know. This means that device
-                    # verification will only become available once we share an encrypted
-                    # room with this user.
-                    self._devices[device_id] = Device(self.client.api, device_id)
+                    # Do not add the keys even if they are in the payload,
+                    # because we are not able to verify them right know.
+                    # This means that device verification will only become
+                    # available once we share an encrypted room with this user.
+                    self._devices[device_id] = Device(
+                        self.client.api, self.client.user_id, device_id
+                    )
 
-        for device in self._devices:
+        for device in self._devices.values():
             device.get_info()
 
-        # Returning a copy prevents adding/removing devices while allowing to verify or
-        # blacklist them.
+        # Returning a copy prevents adding/removing devices while allowing to
+        # verify or blacklist them.
         return self._devices.copy()
