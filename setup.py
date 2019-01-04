@@ -24,9 +24,9 @@ def exec_file(names):
 
 
 setup(
-    name='matrix_client',
+    name='matrix_client_harmonyqt',
     version=exec_file(('matrix_client', '__init__.py',))['__version__'],
-    description='Client-Server SDK for Matrix',
+    description='Client-Server SDK for Matrix - development fork',
     long_description=read_file(('README.rst',)),
     long_description_content_type="text/x-rst",
     author='The Matrix.org Team',
@@ -54,14 +54,7 @@ setup(
         'test': ['pytest', 'responses'],
         'doc': ['Sphinx==1.4.6', 'sphinx-rtd-theme==0.1.9', 'sphinxcontrib-napoleon==0.5.3'],
         'format': ['flake8'],
-        'e2e': ['python-olm==0.1', 'canonicaljson', 'appdirs', 'unpaddedbase64',
+        'e2e': ['python-olm-harmonyqt>=0.1', 'canonicaljson', 'appdirs', 'unpaddedbase64',
                 'pycrypto', 'future>=0.17.1']
     },
-    dependency_links=[
-        'https://github.com/mirukan/matrix-python-sdk/blob/master/'
-        'olm_wheels/python_olm-0.1-cp36-cp36m-linux_x86_64.whl?raw=true',
-
-        'https://github.com/poljar/python-olm/tarball/'
-        'master#egg=python-olm-0.1',
-    ]
 )
