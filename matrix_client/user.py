@@ -40,10 +40,8 @@ class User(object):
             The display name. Defaults to the user ID if not set.
         """
         if room:
-            try:
-                return room.members_displaynames[self.user_id]
-            except KeyError:
-                return self.user_id
+            return room.members_displaynames.get(self.user_id) or self.user_id
+
         if not self.displayname:
             self.displayname = self.client.api.get_display_name(self.user_id)
         return self.displayname or self.user_id
