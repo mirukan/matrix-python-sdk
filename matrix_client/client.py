@@ -173,9 +173,12 @@ class MatrixClient(object):
         self.users = {
             # user_id: User
         }
+        self.user = None
+        self.user_id = None
         if token:
             response = self.api.whoami()
             self.user_id = response["user_id"]
+            self.user = User(self, self.user_id)
             self._sync()
 
     def get_sync_token(self):
@@ -192,6 +195,7 @@ class MatrixClient(object):
         warn("set_user_id is deprecated. Directly access MatrixClient.user_id.",
              DeprecationWarning)
         self.user_id = user_id
+        self.user = User(self, self.user_id)
 
     # TODO: combine register methods into single register method controlled by kwargs
     def register_as_guest(self):
@@ -229,6 +233,7 @@ class MatrixClient(object):
 
     def _post_registration(self, response):
         self.user_id = response["user_id"]
+        self.user = User(self, self.user_id)
         self.token = response["access_token"]
         self.hs = response["home_server"]
         self.api.token = self.token
@@ -314,6 +319,7 @@ class MatrixClient(object):
             "m.login.password", user=username, password=password, device_id=device_id
         )
         self.user_id = response["user_id"]
+        self.user = User(self, self.user_id)
         self.token = response["access_token"]
         self.hs = response["home_server"]
         self.api.token = self.token
