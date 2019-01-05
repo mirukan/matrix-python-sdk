@@ -56,6 +56,7 @@ class Room(object):
         self.rotation_period_msgs = None
         self.rotation_period_ms = None
         self.verify_devices = verify_devices
+        self.loaded_all_history = False
 
     def set_user_profile(self,
                          displayname=None,
@@ -562,8 +563,16 @@ class Room(object):
                 order (old to new), otherwise the order will be reversed (new to old).
             limit (int): Number of messages to go back.
         """
+        if self.loaded_all_history:
+            return
+
         res = self.client.api.get_room_messages(self.room_id, self.prev_batch,
                                                 direction="b", limit=limit)
+        if res["end"] == self.prev_batch:
+            self.loaded_all_history = True
+            return
+        self.prev_batch = res["end"]
+
         events = res["chunk"]
         if not reverse:
             events = reversed(events)
