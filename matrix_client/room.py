@@ -540,7 +540,7 @@ class Room(object):
             return list(self._members.values())
         response = self.client.api.get_room_members(self.room_id)
         for event in response["chunk"]:
-            if event["content"]["membership"] == "join":
+            if event["content"]["membership"] in ("join", "invite"):
                 user_id = event["state_key"]
                 self._add_member(user_id, event["content"].get("displayname"))
         return list(self._members.values())
@@ -749,19 +749,18 @@ class Room(object):
             elif etype == "m.room.member" and clevel == clevel.ALL:
                 # tracking room members can be large e.g. #matrix:matrix.org
                 user_id = state_event["state_key"]
-                if econtent["membership"] == "join":
+                if econtent["membership"] in ("join", "invite"):
                     self._add_member(user_id, econtent.get("displayname"))
                     if self.client._encryption and self.encrypted:
                         # Track the device list of this user
                         self.client.olm_device.device_list.track_user_no_download(user_id)
-                elif econtent["membership"] in ("leave", "kick", "invite"):
+                elif econtent["membership"] in ("leave", "kick"):
                     self._members.pop(user_id, None)
-                    if econtent["membership"] != "invite":
-                        if self.client._encryption and self.encrypted:
-                            # Invalidate any outbound session we have in the room when
-                            # someone leaves
-                            self.client.olm_device.megolm_remove_outbound_session(
-                                self.room_id)
+                    if self.client._encryption and self.encrypted:
+                        # Invalidate any outbound session we have in the room when
+                        # someone leaves
+                        self.client.olm_device.megolm_remove_outbound_session(
+                            self.room_id)
 
         for listener in self.state_listeners:
             if (
