@@ -48,6 +48,7 @@ class Room(object):
         self.invite_only = None
         self.guest_access = None
         self._prev_batch = None
+        self._history_token = None
         self._members = {}
         self.members_displaynames = {
             # user_id: displayname
@@ -566,12 +567,13 @@ class Room(object):
         if self.loaded_all_history:
             return
 
-        res = self.client.api.get_room_messages(self.room_id, self.prev_batch,
-                                                direction="b", limit=limit)
-        if res["end"] == self.prev_batch:
+        res = self.client.api.get_room_messages(
+            self.room_id, self._history_token, direction="b", limit=limit
+        )
+        if res["end"] == self._history_token:
             self.loaded_all_history = True
             return
-        self.prev_batch = res["end"]
+        self._history_token = res["end"]
 
         events = res["chunk"]
         if not reverse:
