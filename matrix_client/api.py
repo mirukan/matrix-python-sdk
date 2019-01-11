@@ -736,7 +736,6 @@ class MatrixHttpApi(object):
         conn_timeout = query_params.get("timeout")
         if conn_timeout:
             conn_timeout = (conn_timeout / 1000) + 10
-        print(conn_timeout)
 
         while True:
             try:
