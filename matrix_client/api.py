@@ -733,6 +733,11 @@ class MatrixHttpApi(object):
         if headers["Content-Type"] == "application/json" and content is not None:
             content = json.dumps(content)
 
+        conn_timeout = query_params.get("timeout")
+        if conn_timeout:
+            conn_timeout = (conn_timeout / 1000) + 10
+        print(conn_timeout)
+
         while True:
             try:
                 response = self.session.request(
@@ -740,8 +745,10 @@ class MatrixHttpApi(object):
                     params=query_params,
                     data=content,
                     headers=headers,
-                    verify=self.validate_cert
+                    verify=self.validate_cert,
+                    timeout=(6.5, conn_timeout)
                 )
+
             except RequestException as e:
                 raise MatrixHttpLibError(e, method, endpoint)
 
