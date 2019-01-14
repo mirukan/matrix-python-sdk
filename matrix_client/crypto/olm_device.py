@@ -108,7 +108,10 @@ class OlmDevice(Device):
         keys = self.olm_account.identity_keys
         super(OlmDevice, self).__init__(self.api, self.user_id, device_id,
                                         database=self.db, ed25519_key=keys['ed25519'],
-                                        curve25519_key=keys['curve25519'])
+                                        curve25519_key=keys['curve25519'],
+                                        verified=True, blacklisted=False,
+                                        ignored=False)
+
 
     def upload_identity_keys(self):
         """Uploads this device's identity keys to HS.
