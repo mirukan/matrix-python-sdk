@@ -70,7 +70,22 @@ class E2EUnknownDevices(Exception):
         self.user_devices = user_devices
 
 
-class UnableToDecryptError(Exception):
-    """An encrypted message couldn't be decrypted due to missing keys."""
+class MegolmDecryptError(Exception):
+    """An encrypted message couldn't be decrypted."""
+    def __init__(self, event, content=""):
+        super(Exception, self).__init__(content)
+        self.event = event
 
+
+class MegolmDecryptMissingKeysError(MegolmDecryptError):
+    """An encrypted message couldn't be decrypted due to missing keys."""
     pass
+
+
+class RoomEventDecryptError(Exception):
+    """An encrypted message for a specific room couldn't be decrypted."""
+    def __init__(self, original_exception, room, event, content=""):
+        super(Exception, self).__init__(content)
+        self.original_exception = original_exception
+        self.room = room
+        self.event = event

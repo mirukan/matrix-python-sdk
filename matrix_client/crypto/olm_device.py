@@ -7,7 +7,7 @@ from canonicaljson import encode_canonical_json
 
 from matrix_client.checks import check_user_id
 from matrix_client.device import Device
-from matrix_client.errors import E2EUnknownDevices, UnableToDecryptError
+from matrix_client.errors import E2EUnknownDevices, MegolmDecryptError, MegolmDecryptMissingKeysError
 from matrix_client.crypto.one_time_keys import OneTimeKeysManager
 from matrix_client.crypto.device_list import DeviceList
 from matrix_client.crypto.sessions import MegolmOutboundSession, MegolmInboundSession
@@ -65,7 +65,7 @@ class OlmDevice(Device):
                  keys_threshold=0.1,
                  Store=CryptoStore,
                  store_conf=None,
-                 load_all=False):
+                 load_all=True):
         if not 0 <= signed_keys_proportion <= 1:
             raise ValueError('signed_keys_proportion must be between 0 and 1.')
         if not 0 <= keys_threshold <= 1:
@@ -83,11 +83,12 @@ class OlmDevice(Device):
         if not device_id:
             device_id = self.db.device_id
         if self.olm_account:
-            if load_all:
-                self.db.load_olm_sessions(self.olm_sessions)
-                self.db.load_inbound_sessions(self.megolm_inbound_sessions)
-                self.db.load_outbound_sessions(self.megolm_outbound_sessions)
-                self.db.load_device_keys(self.api, self.device_keys)
+            # FIXME: devices are never loaded from db correctly if not load_all
+            # if load_all:
+            self.db.load_olm_sessions(self.olm_sessions)
+            self.db.load_inbound_sessions(self.megolm_inbound_sessions)
+            self.db.load_outbound_sessions(self.megolm_outbound_sessions)
+            self.db.load_device_keys(self.api, self.device_keys)
             logger.info('Loaded Olm account from database for device %s.', device_id)
         else:
             self.olm_account = olm.Account()
@@ -787,9 +788,11 @@ class OlmDevice(Device):
             # Assume that this is a redacted event
             return
         if content['algorithm'] != self._megolm_algorithm:
-            raise RuntimeError('Incorrect algorithm "{}" value in event sent by device '
-                               '{} of user {}.'.format(content['algorithm'], device_id,
-                                                       user_id))
+            raise MegolmDecryptError(
+                event,
+                'Incorrect algorithm "{}" value in event sent by device '
+                '{} of user {}.'.format(content['algorithm'], device_id, user_id)
+            )
 
         sender_key = content['sender_key']
         room_id = event['room_id']
@@ -801,7 +804,8 @@ class OlmDevice(Device):
             session = self.db.get_inbound_session(
                 room_id, sender_key, session_id, sessions)
             if not session:
-                raise UnableToDecryptError(
+                raise MegolmDecryptMissingKeysError(
+                    event,
                     "Unable to decrypt event sent by device {} of user {}: The sender's "
                     "device has not sent us the keys for this message."
                     .format(device_id, user_id)
@@ -810,9 +814,11 @@ class OlmDevice(Device):
         try:
             decrypted_event, message_index = session.decrypt(content['ciphertext'])
         except olm.group_session.OlmGroupSessionError as e:
-            raise RuntimeError('Unable to decrypt event sent by device {} of user {} '
-                               'with matching megolm session: {}.'.format(device_id,
-                                                                          user_id, e))
+            raise MegolmDecryptError(
+                event,
+                'Unable to decrypt event sent by device {} of user {} '
+                'with matching megolm session: {}.'.format(device_id, user_id, e)
+            )
 
         try:
             device = self.device_keys[user_id][device_id]
@@ -822,8 +828,11 @@ class OlmDevice(Device):
             # Do not mark events decrypted using a forwarded key as verified
             if device.verified and not session.forwarding_chain:
                 if device.ed25519 != session.ed25519 or device.curve25519 != sender_key:
-                    raise RuntimeError('Device keys mismatch in event sent by device {}.'
-                                       .format(device.device_id))
+                    raise MegolmDecryptError(
+                        event,
+                        'Device keys mismatch in event sent by device {}.'
+                        .format(device.device_id)
+                    )
                 event = VerifiedEvent(event)
 
         try:
@@ -836,9 +845,11 @@ class OlmDevice(Device):
         else:
             if properties['origin_server_ts'] != event['origin_server_ts'] or \
                     properties['event_id'] != event['event_id']:
-                raise RuntimeError('Detected a replay attack from device {} of user {} '
-                                   'on decrypted event: {}.'.format(device_id, user_id,
-                                                                    decrypted_event))
+                raise MegolmDecryptError(
+                    event,
+                    'Detected a replay attack from device {} of user {} '
+                    'on decrypted event: {}.'.format(device_id, user_id, decrypted_event)
+                )
 
         decrypted_event = json.loads(decrypted_event)
 

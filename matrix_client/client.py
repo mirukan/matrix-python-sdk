@@ -120,7 +120,8 @@ class MatrixClient(object):
     def __init__(self, base_url, token=None, user_id=None,
                  valid_cert_check=True, sync_filter_limit=20,
                  cache_level=CACHE.ALL, encryption=False, encryption_conf=None,
-                 restore_device_id=False, verify_devices=False):
+                 restore_device_id=False, verify_devices=False,
+                 decrypt_error_handler=None):
         if user_id:
             warn(
                 "user_id is deprecated. "
@@ -151,6 +152,7 @@ class MatrixClient(object):
         self.first_sync = True
         self.restore_device_id = restore_device_id
         self.verify_devices = verify_devices
+        self.decrypt_error_handler = decrypt_error_handler
         if isinstance(cache_level, CACHE):
             self._cache_level = cache_level
         else:
