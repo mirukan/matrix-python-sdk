@@ -17,17 +17,26 @@ from .checks import check_user_id
 from .errors import MatrixRequestError, MatrixUnexpectedResponse
 from .room import Room
 from .user import User
+import sys
 try:
     from .crypto.olm_device import OlmDevice
     ENCRYPTION_SUPPORT = True
 except ImportError:
+    import traceback
+    import textwrap
+    print(
+        ("Encryption unavailable due to error, "
+         "make sure python_olm_harmonyqt is installed correctly:"),
+        textwrap.indent(traceback.format_exc(), " " * 4),
+        sep="\n",
+        file=sys.stderr
+    )
     ENCRYPTION_SUPPORT = False
 from threading import Thread
 from time import sleep
 from uuid import uuid4
 from warnings import warn
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
 
